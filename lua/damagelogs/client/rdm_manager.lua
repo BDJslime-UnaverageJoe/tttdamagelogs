@@ -45,10 +45,11 @@ local ReportFrame
 
 local PromptFrame
 
-local PromptMode = -1
+local Prompted = -1
 
 local function BuildPromptFrame()
-    if PromptMode == 1 then return end
+    if Prompted == 1 then return end
+    if ActiveReports() == 0 then return end
     if IsValid(PromptFrame) then 
         PromptFrame:UpdateCount()
         return
@@ -87,7 +88,7 @@ local function BuildPromptFrame()
     disable:SetSize(125, bh)
     disable:SetText(TTTLogTranslate(GetDMGLogLang, "prompt_ignore"))
     disable.DoClick = function()
-        PromptMode = 1
+        Prompted = 1
         PromptFrame:Close()
     end
 
@@ -900,7 +901,7 @@ net.Receive("DL_SendReport", function()
         local client = LocalPlayer()
 
         if not client.IsActive or not client:IsActive() then
-            if PromptMode ~= -1 then
+            if Prompted ~= -1 then
                 BuildPromptFrame()
                 return
             end
@@ -910,21 +911,17 @@ net.Receive("DL_SendReport", function()
 end)
 
 net.Receive("DL_Death", function()
-    if not IsValid(ReportFrame) then
-        if IsValid(PromptFrame) then
-            PromptFrame:Close()
-            PromptFrame:Remove()
-        end
-        BuildReportFrame()
-    end
-end)
-
-net.Receive("DL_Prompt", function()
-    if PromptMode == -1 then PromptMode = 0 end
-    if ActiveReports() == 0 then return end
-    if not IsValid(PromptFrame) then
+    local forced = net.ReadBool()
+    if not forced then
+        if Prompted == -1 then Prompted = 0 end
         BuildPromptFrame()
+        return
     end
+    if IsValid(PromptFrame) then
+        PromptFrame:Close()
+        PromptFrame:Remove()
+    end
+    BuildReportFrame()
 end)
 
 net.Receive("DL_Respawn", function()
