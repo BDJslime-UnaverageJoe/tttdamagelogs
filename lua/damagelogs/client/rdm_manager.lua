@@ -156,7 +156,15 @@ local function BuildReportFrame(report)
             local TextEntry = vgui.Create("DTextEntry")
             TextEntry:SetMultiline(true)
             TextEntry:SetHeight(150)
+            if report.savedresponse then TextEntry:SetText(report.savedresponse) end
             PanelList:AddItem(TextEntry)
+
+            TextEntry.OnLoseFocus = function()
+                if not report.finished then
+                    report.savedresponse = string.Trim(TextEntry:GetValue())
+                end
+            end
+
             local Button = vgui.Create("DButton")
             Button:SetText(TTTLogTranslate(GetDMGLogLang, "Send"))
 
@@ -928,6 +936,10 @@ net.Receive("DL_Respawn", function()
     if IsValid(PromptFrame) then
         PromptFrame:Close()
         PromptFrame:Remove()
+    end
+    if IsValid(ReportFrame) then
+        ReportFrame:Close()
+        ReportFrame:Remove()
     end
 end)
 
