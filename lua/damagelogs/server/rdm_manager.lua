@@ -688,7 +688,7 @@ hook_Add("PlayerDeath", "RDM_Manager", function(ply)
 end)
 
 hook_Add("PlayerSpawn", "RDM_Manager", function(ply)
-    if GetRoundState() == ROUND_ACTIVE then return end
+    if GetRoundState() != ROUND_ACTIVE then return end
     net.Start("DL_Respawn")
     net.Send(ply)
 end)
