@@ -43,60 +43,6 @@ end
 
 local ReportFrame
 
-local PromptFrame
-
-local Prompted = -1
-
-local function BuildPromptFrame()
-    if Prompted == 1 then return end
-    if ActiveReports() == 0 then return end
-    if IsValid(PromptFrame) then 
-        PromptFrame:UpdateCount()
-        return
-    end
-
-    local w, h = 300, 180
-
-    PromptFrame = vgui.Create("DFrame")
-    PromptFrame:SetSize(w, h)
-    PromptFrame:Center()
-    PromptFrame:SetTitle("")
-    PromptFrame:SetVisible(true)
-    PromptFrame:SetMouseInputEnabled(true)
-
-    local inner = vgui.Create("DPanel", PromptFrame)
-    inner:StretchToParent(5, 25, 5, 45)
-
-    local text = vgui.Create("DLabel", inner)
-    text:SetWrap(true)
-    text:SetText(string.format(TTTLogTranslate(GetDMGLogLang, "prompt_text"), ActiveReports()))
-    text:SetDark(true)
-    text:StretchToParent(10, 5, 10, 5)
-
-    local bw, bh = 75, 25
-    local cancel = vgui.Create("DButton", PromptFrame)
-    cancel:SetPos(5, h - 40)
-    cancel:SetSize(125, bh)
-    cancel:SetText(TTTLogTranslate(GetDMGLogLang, "prompt_answer"))
-    cancel.DoClick = function()
-        RunConsoleCommand("dmglogs_answerreport")
-        PromptFrame:Close()
-    end
-
-    local disable = vgui.Create("DButton", PromptFrame)
-    disable:SetPos(w - 130, h - 40)
-    disable:SetSize(125, bh)
-    disable:SetText(TTTLogTranslate(GetDMGLogLang, "prompt_ignore"))
-    disable.DoClick = function()
-        Prompted = 1
-        PromptFrame:Close()
-    end
-
-    PromptFrame.UpdateCount = function(PromptFrame)
-        text:SetText(string.format(TTTLogTranslate(GetDMGLogLang, "prompt_text"), ActiveReports()))
-    end
-end
-
 local function BuildReportFrame(report)
     if IsValid(ReportFrame) and report then
         if HasReportBeenRendered(report) then
@@ -909,10 +855,6 @@ net.Receive("DL_SendReport", function()
         local client = LocalPlayer()
 
         if not client.IsActive or not client:IsActive() then
-            if Prompted ~= -1 then
-                BuildPromptFrame()
-                return
-            end
             BuildReportFrame(report)
         end
     end
@@ -920,23 +862,14 @@ end)
 
 net.Receive("DL_Death", function()
     local forced = net.ReadBool()
-    if not forced then
-        if Prompted == -1 then Prompted = 0 end
-        BuildPromptFrame()
+    if not forced and ActiveReports() > 0 then
+        chat.AddText(Color(255, 62, 62), net.ReadString(), color_white, " " .. string.format(TTTLogTranslate(GetDMGLogLang, "delayed_text"), ActiveReports(), Damagelog.Respond_Command) )
         return
-    end
-    if IsValid(PromptFrame) then
-        PromptFrame:Close()
-        PromptFrame:Remove()
     end
     BuildReportFrame()
 end)
 
 net.Receive("DL_Respawn", function()
-    if IsValid(PromptFrame) then
-        PromptFrame:Close()
-        PromptFrame:Remove()
-    end
     if IsValid(ReportFrame) then
         ReportFrame:Close()
         ReportFrame:Remove()
