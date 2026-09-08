@@ -1,12 +1,10 @@
 if SERVER then
-    --Global Variables Unavailable? find how to hook later
+    --Global Variables are not initialized until after, for now the hooks can sit unused
     --if CR_VERSION then
     Damagelog:EventHook("TTTPlayerRoleChanged")
     Damagelog:EventHook("TTTPlayerRoleChangedByItem")
     --elseif TTT2 then
-        --TODO
-    --else
-        --UNUSED
+    Damagelog:EventHook("TTT2OnTriggeredEvent")
     --end
     Damagelog:EventHook("PlayerSpawn")
 else
@@ -37,6 +35,33 @@ function event:TTTPlayerRoleChangedByItem(ply, tgt, item)
     })
 end
 
+-- TTT2 uses one hook for its events which can be problematic if there are events for other catagories, for now we only need role events
+function event:TTT2OnTriggeredEvent(type, event)
+    if type == "rolechange" then
+
+        local ply = player.GetBySteamID64(event.sid64)
+
+        if event.oldRole != event.newRole then
+            self.CallEvent({
+                [1] = 1,
+                [2] = ply:GetDamagelogID(),
+                [3] = event.oldRole,
+                [4] = event.newRole
+            })
+            Damagelog:UpdateRecentRole(ply, event.newRole)
+        end
+
+        -- Should work for most team change cases if they join a team that itsnt default for them
+        if roles.GetByIndex(event.newRole).defaultTeam != event.newTeam then
+            self.CallEvent({
+                [1] = 4,
+                [2] = ply:GetDamagelogID(),
+                [4] = event.newTeam
+            })
+        end
+    end
+end
+
 function event:PlayerSpawn(ply)
     self.CallEvent({
         [1] = 3,
@@ -55,6 +80,8 @@ function event:ToString(v, roles)
         return string.format(TTTLogTranslate(GetDMGLogLang, "role_item"), ply.nick, Damagelog:StrRole(ply.role),  Damagelog:GetWeaponName(v[4]), tgt.nick, Damagelog:StrRole(tgt.role))
     elseif v[1] == 3 then
         return string.format(TTTLogTranslate(GetDMGLogLang, "revive"), ply.nick, Damagelog:StrRole(ply.role))
+    elseif v[1] == 4 then 
+        return string.format(TTTLogTranslate(GetDMGLogLang, "role_team"), ply.nick, Damagelog:StrRole(ply.role), TTTLogTranslate(GetDMGLogLang, v[3]))
     end
 end
 

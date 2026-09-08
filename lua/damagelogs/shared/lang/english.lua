@@ -413,6 +413,7 @@ DamagelogLang.english = {
 
     role_change = "%s [%s] has changed into [%s]",
     role_item = "%s [%s] used %s on %s [%s]",
+    role_team = "%s [%s] has joined [%s]",
     revive = "%s [%s] has been revived",
 
     delayed_text = [[You have %s unanswered reports, You may respond to them now using %s or be forced to at the end of the current round.]],
