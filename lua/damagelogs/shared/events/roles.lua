@@ -56,7 +56,7 @@ function event:TTT2OnTriggeredEvent(type, event)
             self.CallEvent({
                 [1] = 4,
                 [2] = ply:GetDamagelogID(),
-                [4] = event.newTeam
+                [3] = event.newTeam
             })
         end
     end
